@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-import replicate
+import requests
 from models import Card, Config
 from PIL import Image
 from io import BytesIO
@@ -210,40 +210,20 @@ Return only the prompt text with no additional explanation."""
                 art_prompt = self.generate_art_prompt(card, attempt)
                 print(f"Generated art prompt (attempt {attempt + 1}): {art_prompt}...")
 
-                # Get the active Replicate model
-                active_model = self.config.get_active_replicate_model()
+                # Get the active LocalAI image model
+                active_model = self.config.get_active_localai_image_model()
                 print(f"Using image model: {active_model}")
 
-                # Configure model-specific parameters, passing the card to check if it's a Saga
-                model_params = self._get_model_params(art_prompt, card)
+                # Generate image using LocalAI's image generation endpoint
+                image_data = self._generate_image_with_localai(art_prompt, card)
 
-                # Keep track of the original aspect ratio for later processing
-                original_aspect_ratio = model_params.get("aspect_ratio", "5:4")
-
-                # Generate image using the prompt with selected Replicate model
-                image_response = replicate.run(
-                    active_model,
-                    input=model_params
-                )
-
-                # Convert response to bytes
-                if hasattr(image_response, 'read'):
-                    image_data = image_response.read()
+                # Check if we need to crop based on aspect ratio
+                if "Saga" in card.type:
+                    print("Cropping image to 4:5 (vertical for Saga)...")
+                    image_data = self.crop_to_4x5_ratio(image_data)
                 else:
-                    # If it's a URL or other format
-                    import requests
-                    image_data = requests.get(image_response).content
-
-                # Check if we need to crop
-                if original_aspect_ratio != "5:4" and original_aspect_ratio != "4:5":
-                    # For Saga cards (vertical)
-                    if "Saga" in card.type:
-                        print(f"Cropping image from {original_aspect_ratio} to 4:5 (vertical for Saga)...")
-                        image_data = self.crop_to_4x5_ratio(image_data)
-                    else:
-                        # For regular cards (horizontal)
-                        print(f"Cropping image from {original_aspect_ratio} to 5:4...")
-                        image_data = self.crop_to_5x4_ratio(image_data)
+                    print("Cropping image to 5:4 (standard)...")
+                    image_data = self.crop_to_5x4_ratio(image_data)
 
                 # Create a BytesIO object that behaves like a file
                 return art_prompt, BytesIO(image_data)
@@ -256,61 +236,56 @@ Return only the prompt text with no additional explanation."""
                     print(f"Attempt {attempt + 1} failed: {str(e)}. Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
 
-    def _get_model_params(self, prompt: str, card: Card = None) -> dict:
-        """Get model-specific parameters based on the selected image model."""
-        active_model_name = self.config.image_model
-
-        # Check if this is a Saga card to determine orientation
+    def _generate_image_with_localai(self, prompt: str, card: Card = None) -> bytes:
+        """Generate image using LocalAI's image generation endpoint.
+        
+        Args:
+            prompt: The text prompt for image generation
+            card: The card object (used to determine if it's a Saga for aspect ratio)
+            
+        Returns:
+            bytes: The generated image data
+        """
+        # Determine size based on card type and model
         is_saga = card and "Saga" in card.type
-
-        if active_model_name == "flux":
+        model = self.config.get_active_localai_image_model()
+        
+        # Flux.1 supports higher resolutions and different aspect ratios
+        if "flux" in model.lower():
             if is_saga:
-                # Vertical aspect ratio for Sagas (inverse of standard)
-                return {
-                    "prompt": prompt,
-                    "aspect_ratio": "9:16",  # Vertical for Sagas
-                    "safety_tolerance": 6,
-                    "prompt_upsampling": True
-                }
+                # Vertical aspect ratio for Sagas - use Flux.1's native 9:16
+                size = "768x1344"  # 9:16 ratio, good for Flux.1
             else:
-                # Standard horizontal aspect ratio
-                return {
-                    "prompt": prompt,
-                    "aspect_ratio": "5:4",
-                    "safety_tolerance": 6,
-                    "prompt_upsampling": True
-                }
-        elif active_model_name == "imagen":
-            if is_saga:
-                # Vertical aspect ratio for Sagas
-                return {
-                    "prompt": prompt,
-                    "aspect_ratio": "9:16",  # Vertical for Sagas
-                    "safety_filter_level": "block_only_high"
-                }
-            else:
-                # Standard horizontal aspect ratio
-                return {
-                    "prompt": prompt,
-                    "aspect_ratio": "4:3",
-                    "safety_filter_level": "block_only_high"
-                }
+                # Standard horizontal aspect ratio - use Flux.1's native 4:3 or custom
+                size = "1024x768"  # 4:3 ratio, will crop to 5:4 later
         else:
-            # Default to Flux parameters
+            # Standard Stable Diffusion sizes
             if is_saga:
-                return {
-                    "prompt": prompt,
-                    "aspect_ratio": "9:16",
-                    "safety_tolerance": 6,
-                    "prompt_upsampling": True
-                }
+                size = "512x640"  # Roughly 4:5 ratio
             else:
-                return {
-                    "prompt": prompt,
-                    "aspect_ratio": "5:4",
-                    "safety_tolerance": 6,
-                    "prompt_upsampling": True
-                }
+                size = "640x512"  # Roughly 5:4 ratio
+            
+        # Make request to LocalAI's images/generations endpoint
+        response = self.client.images.generate(
+            model=model,
+            prompt=prompt,
+            size=size,
+            n=1,
+            response_format="b64_json"
+        )
+        
+        # Extract base64 image data and decode it
+        import base64
+        image_b64 = response.data[0].b64_json
+        image_data = base64.b64decode(image_b64)
+        
+        return image_data
+
+    def _get_model_params(self, prompt: str, card: Card = None) -> dict:
+        """Get model-specific parameters (kept for compatibility but not used with LocalAI)."""
+        # This method is kept for compatibility but LocalAI uses different parameters
+        # The actual parameters are handled in _generate_image_with_localai
+        return {"prompt": prompt}
 
     def process_card(self, card: Card) -> Card:
         """Process a single card, generating art and saving data."""

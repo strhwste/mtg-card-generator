@@ -1,0 +1,19 @@
+{
+  "ollama": {
+    "base_url": "http://localhost:11434",
+    "models": {
+      "text": {
+        "default": "gemma3:4b"
+      }
+    }
+  },
+  "comfyui": {
+    "base_url": "http://localhost:8188",
+    "workflow_path": "./comfyui/workflows",
+    "models": {
+      "image": {
+        "default": "flux1-dev"
+      }
+    }
+  }
+}

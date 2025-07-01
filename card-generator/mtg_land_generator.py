@@ -1,9 +1,8 @@
 import json
 from pathlib import Path
-import replicate
+import requests
 from typing import List, Dict
 from models import Card, Config
-import requests
 from PIL import Image
 import io
 
@@ -78,92 +77,41 @@ Return only the art prompt text with no additional explanation."""
         return card
 
     def _get_model_params(self, prompt: str) -> dict:
-        """Get model-specific parameters based on the selected image model."""
-        active_model_name = self.config.image_model
-
-        if active_model_name == "flux":
-            return {
-                "prompt": prompt,
-                "aspect_ratio": "5:4",
-                "safety_tolerance": 6,
-                "prompt_upsampling": True
-            }
-        elif active_model_name == "imagen":
-            return {
-                "prompt": prompt,
-                "aspect_ratio": "4:3",  # Using 4:3 for Imagen
-                "safety_filter_level": "block_only_high"
-            }
-        else:
-            # Default to Flux parameters
-            return {
-                "prompt": prompt,
-                "aspect_ratio": "5:4",
-                "safety_tolerance": 6,
-                "prompt_upsampling": True
-            }
+        """Get model-specific parameters (kept for compatibility but not used with LocalAI)."""
+        # This method is kept for compatibility but LocalAI uses different parameters
+        # The actual parameters are handled in generate_land_art
+        return {"prompt": prompt}
 
     def generate_land_art(self, card: Card, art_prompt: str) -> bytes:
-        """Generate art for a land card using Replicate and crop if necessary."""
+        """Generate art for a land card using LocalAI."""
         try:
-            # Get the active Replicate model
-            active_model = self.config.get_active_replicate_model()
-            print(f"Using image model: {active_model} for {card.name}")
+            # Get the active LocalAI image model
+            model = self.config.get_active_localai_image_model()
+            print(f"Using image model: {model} for {card.name}")
 
-            # Configure model-specific parameters
-            model_params = self._get_model_params(art_prompt)
+            # Determine optimal size based on the model
+            if "flux" in model.lower():
+                # Flux.1 works better with higher resolutions
+                size = "1024x768"  # 4:3 ratio, will crop to 5:4 
+            else:
+                # Standard Stable Diffusion size
+                size = "640x512"  # 5:4 aspect ratio
 
-            # Generate image using the prompt with selected Replicate model
-            image_response = replicate.run(
-                active_model,
-                input=model_params
+            # Generate image using LocalAI's images/generations endpoint
+            response = self.client.images.generate(
+                model=model,
+                prompt=art_prompt,
+                size=size,
+                n=1,
+                response_format="b64_json"
             )
-
-            # If using Imagen (4:3 aspect ratio), we need to crop to 5:4
-            if self.config.image_model == "imagen":
-                # Download the image
-                image_url = image_response
-                response = requests.get(image_url)
-
-                if response.status_code == 200:
-                    # Open the image
-                    img = Image.open(io.BytesIO(response.content))
-
-                    # Calculate dimensions for cropping to 5:4 aspect ratio
-                    width, height = img.size
-                    target_width = height * 5 // 4
-
-                    # Ensure the target width doesn't exceed the original width
-                    if target_width > width:
-                        # If the width is insufficient, adjust the height instead
-                        target_height = width * 4 // 5
-                        # Crop from the center
-                        top = (height - target_height) // 2
-                        bottom = top + target_height
-                        left = 0
-                        right = width
-                    else:
-                        # Crop from the center
-                        left = (width - target_width) // 2
-                        right = left + target_width
-                        top = 0
-                        bottom = height
-
-                    # Crop the image
-                    cropped_img = img.crop((left, top, right, bottom))
-
-                    # Convert back to bytes
-                    img_byte_arr = io.BytesIO()
-                    cropped_img.save(img_byte_arr, format=img.format or 'PNG')
-                    img_byte_arr.seek(0)
-
-                    return img_byte_arr
-                else:
-                    print(f"Failed to download image: {response.status_code}")
-                    return b""
-
-            # For other models or if cropping failed, return the original response
-            return image_response
+            
+            # Extract base64 image data and decode it
+            import base64
+            image_b64 = response.data[0].b64_json
+            image_data = base64.b64decode(image_b64)
+            
+            return image_data
 
         except Exception as e:
             print(f"Failed to generate land art: {str(e)}")

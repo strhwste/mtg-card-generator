@@ -37,23 +37,31 @@ class Config:
     json_model: str = None
 
     # Image generation models
-    image_model: str = "flux"  # Can be "flux" or "imagen"
-    replicate_models: Dict[str, str] = field(default_factory=lambda: {
-        "flux": "black-forest-labs/flux-1.1-pro",
-        "imagen": "google/imagen-3"
+    image_model: str = "flux1"  # Can be "flux1", "stablediffusion" or "dalle"
+    ollama_models: Dict[str, Dict[str, str]] = field(default_factory=lambda: {
+        "text": {
+            "main": "gemma3:4b",
+            "json": "gemma3:4b"
+        }
+    })
+    
+    comfyui_models: Dict[str, Dict[str, str]] = field(default_factory=lambda: {
+        "image": {
+            "flux1": "flux1-dev",
+            "stablediffusion": "sd15",
+            "dalle": "flux1-dev"
+        }
     })
 
     # API configuration
-    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    ollama_base_url: str = "http://localhost:11434"
+    comfyui_base_url: str = "http://localhost:8188"
 
     # API client
     openai_client: Optional[Any] = None
 
     # Extra headers for API calls
-    api_headers: Dict[str, str] = field(default_factory=lambda: {
-        "HTTP-Referer": "https://example.com",
-        "X-Title": "MTG Card Generator"
-    })
+    api_headers: Dict[str, str] = field(default_factory=lambda: {})
 
     def __post_init__(self):
         if self.color_distribution is None:
@@ -79,54 +87,72 @@ class Config:
         try:
             with open(settings_path) as f:
                 settings = json.load(f)
+                
                 # Set default model values if not already set
+                models_config = settings.get("models", {})
                 if not self.main_model:
-                    self.main_model = settings.get("models", {}).get("openai", "openai/chatgpt-4o-latest")
+                    self.main_model = models_config.get("main", "gemma-12b")
                 if not self.json_model:
-                    self.json_model = settings.get("models", {}).get("gemini", "google/gemini-2.0-flash-001")
+                    self.json_model = models_config.get("json", "gemma3:4b")
 
                 # Load image model preferences
-                models_config = settings.get("models", {})
                 if "image_model" in models_config:
                     self.image_model = models_config["image_model"]
 
-                # Update replicate models if specified
-                replicate_config = models_config.get("replicate", {})
-                if isinstance(replicate_config, dict):
-                    for model_key, model_id in replicate_config.items():
-                        if model_key in self.replicate_models:
-                            self.replicate_models[model_key] = model_id
+                # Update Ollama models if specified
+                ollama_config = models_config.get("ollama_models", {})
+                if isinstance(ollama_config, dict):
+                    if "text" in ollama_config:
+                        for model_key, model_id in ollama_config["text"].items():
+                            if model_key in self.ollama_models["text"]:
+                                self.ollama_models["text"][model_key] = model_id
+                
+                # Update ComfyUI models if specified
+                comfyui_config = models_config.get("comfyui_models", {})
+                if isinstance(comfyui_config, dict):
+                    if "image" in comfyui_config:
+                        for model_key, model_id in comfyui_config["image"].items():
+                            if model_key in self.comfyui_models["image"]:
+                                self.comfyui_models["image"][model_key] = model_id
+
+                # Load Ollama base URL if specified
+                ollama_settings = settings.get("ollama", {})
+                if "base_url" in ollama_settings:
+                    self.ollama_base_url = ollama_settings["base_url"]
+                    
+                # Load ComfyUI base URL if specified
+                comfyui_settings = settings.get("comfyui", {})
+                if "base_url" in comfyui_settings:
+                    self.comfyui_base_url = comfyui_settings["base_url"]
 
         except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
             print(f"Warning: Could not load model settings from {settings_path}: {e}")
             # Set fallback defaults
             if not self.main_model:
-                self.main_model = "openai/chatgpt-4o-latest"
+                self.main_model = "gemma-12b"
             if not self.json_model:
-                self.json_model = "google/gemini-2.0-flash-001"
+                self.json_model = "gemma-12b"
 
     def initialize_clients(self, settings_path: str = "settings.json"):
         """Initialize API clients based on settings."""
-        # Load API keys from settings
+        # Load API keys and configuration from settings
         with open(settings_path) as f:
             settings = json.load(f)
-            openrouter_api_key = settings["openrouter"]["apiKey"]
-            replicate_api_key = settings["replicate"]["apiKey"]
+            localai_settings = settings.get("localai", {})
+            localai_api_key = localai_settings.get("api_key", "not-needed")
+            localai_base_url = localai_settings.get("base_url", self.localai_base_url)
 
-        # Set Replicate API token as environment variable
-        os.environ["REPLICATE_API_TOKEN"] = replicate_api_key
-
-        # Initialize OpenAI client with OpenRouter configuration
+        # Initialize OpenAI client with LocalAI configuration
         self.openai_client = OpenAI(
-            base_url=self.openrouter_base_url,
-            api_key=openrouter_api_key,
+            base_url=localai_base_url,
+            api_key=localai_api_key,
         )
 
         return self.openai_client
 
-    def get_active_replicate_model(self) -> str:
-        """Get the currently active Replicate model based on the image_model setting."""
-        return self.replicate_models.get(self.image_model, self.replicate_models["flux"])
+    def get_active_localai_image_model(self) -> str:
+        """Get the currently active LocalAI image model based on the image_model setting."""
+        return self.localai_models["image"].get(self.image_model, self.localai_models["image"]["stablediffusion"])
 
 
 @dataclass

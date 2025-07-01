@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run MTG Card Generator",
+			"type": "shell",
+			"command": "/home/severin/Dokumente/Github/mtg-card-generator/.venv/bin/python",
+			"args": [
+				"card-generator/main.py"
+			],
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
