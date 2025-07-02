@@ -138,14 +138,19 @@ class Config:
         # Load API keys and configuration from settings
         with open(settings_path) as f:
             settings = json.load(f)
-            localai_settings = settings.get("localai", {})
-            localai_api_key = localai_settings.get("api_key", "not-needed")
-            localai_base_url = localai_settings.get("base_url", self.localai_base_url)
+            
+            # Get Ollama settings
+            ollama_settings = settings.get("ollama", {})
+            ollama_base_url = ollama_settings.get("base_url", self.ollama_base_url)
+            
+            # Get ComfyUI settings
+            comfyui_settings = settings.get("comfyui", {})
+            self.comfyui_base_url = comfyui_settings.get("base_url", self.comfyui_base_url)
 
-        # Initialize OpenAI client with LocalAI configuration
+        # Initialize OpenAI client with Ollama configuration
         self.openai_client = OpenAI(
-            base_url=localai_base_url,
-            api_key=localai_api_key,
+            base_url=f"{ollama_base_url}/v1",
+            api_key="not-needed",  # Ollama doesn't require an API key
         )
 
         return self.openai_client

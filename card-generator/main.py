@@ -232,37 +232,243 @@ class MTGGeneratorOrchestrator:
 async def main():
     # Example complete theme override (you can pass your own theme text here)
     complete_theme = """
-    # The Shattered Realms of Eltarion
+# Mauke — The Wuppertal Club Experience
 
-    ## World Description
-    Eltarion was once a harmonious world where five elemental planes intersected in perfect balance. A cataclysmic event called the Convergence shattered this unity, creating unstable overlapping zones where the elemental powers chaotically blend. The denizens of each realm now struggle to survive in this fractured landscape, forming uneasy alliances or waging territorial wars.
+## World Description
+Facito from Mauke captures the vibrant, underground club scene of Wuppertal’s iconic Mauke. This fractured world pulses with music, nightlife, and social energy — from DJs spinning decks, to bar crews mixing drinks, to shadowy backstage dealings. Visitors flow through, drawn by the bass and lights, while Bouncers enforce control over the chaotic dancefloor and beyond. The set is a vivid snapshot of club culture—energy, tension, and fleeting connections in a late-night microcosm.
 
-    ## Key Factions
-    - The Luminari Conclave (White): Scholars and mages who seek to restore balance through knowledge and order
-    - The Tidecallers (Blue): Adaptable mystics who harness the unpredictable flow of mana through the shattered realms
-    - The Shadowbond Covenant (Black): Opportunists who believe only the strongest should survive and rule the new world
-    - The Volcanic Warband (Red): Passionate warriors embracing the chaos as a path to freedom and self-expression
-    - The Wildgrowth Collective (Green): Druids and beasts attempting to heal the natural order through aggressive restoration
+## Key Factions & Commanders
+- **Vinyl-DJ (Blue–White)**  
+  Masters of analog groove and crowd orchestration, spinning old-school vinyl to guide the rhythm.  
+  *Example Commander*: **Colkin, Soul of Mauke**
 
-    ## Creature Types
-    The set prominently features Elementals, Wizards, Warriors, Spirits, Beasts, Angels, Demons, Dragons, Merfolk, and Elves, with many creatures exhibiting hybrid characteristics from the blending of realms.
+- **CDJ-USB DJ (Red–Green)**  
+  Tech-savvy DJs wielding digital decks and live remixing to unleash chaotic energy.  
+  *Example Commander*: **Facito, Beat Breaker**
 
-    ## Mechanical Themes
-    - "Convergence" cards that gain additional effects when you control lands of different types
-    - Multicolor emphasis reflecting the blending of elemental powers
-    - Land transformation and land-matters mechanics
-    - Tribal elements for the major factions
-    - Exile and return mechanics representing the unstable nature of reality
+- **Booker DJ (Black–Red)**  
+  Tech-savvy DJs wielding digital decks and live remixing to unleash chaotic energy.  
+  *Example Commander*: **DCHM, Finder of Gems**
 
-    ## Synergies
-    - Land-based ramp strategies that power multicolor threats
-    - Faction-based tribal synergies with cross-faction hybrid creatures
-    - Control strategies using reality-warping exile effects
-    - Aggressive decks exploiting elemental chaos effects
+- **Bar-Crew (Green–White)**  
+  The lifeblood behind the scenes, mixing drinks and creating Visitor tokens to fuel the night.  
+  *Example Commander*: **CJ, Nightlife Alchemist**
 
-    ## Play Styles
-    The set supports aggressive tribal strategies, midrange value-generating decks, controlling reality-manipulation decks, and five-color convergence ramp decks.
-    """
+- **Technicians (Blue–Red)**  
+  Control specialists managing sound, light, and effects, turning chaos into harmony.  
+  *Example Commander*: **Die drei L, Mauke Sound/Light Technicians**
+
+- **Backstage (Black–Green)**  
+  The shadowy, gritty hub of whispered deals and influence, seizing Visitors and controlling access.  
+  *Example Commander*: **Kuswolf, Talker of Shadows**
+
+- **Marketing (Red–White)**  
+  The flashy promoters and social media mavens, drawing in crowds and creating buzz.  
+  *Example Commander*: **Kötting, SVG Manhandler**
+
+## Creature Types
+- **DJs** (Legendary creatures representing real Mauke performers and founders)
+- **Visitors** (Token creatures representing clubgoers)
+- **Bouncers** (Token creatures enforcing control)
+- **Visual Angels** (Token flying creatures representing light shows and crowd illusions)
+- Other: Spirits, Warriors, Technicians, Bar Staff
+
+## Mechanical Themes
+- **Token creation** focused on Visitors and Bouncers, driving synergy across factions
+- **Mana ramp and utility** from Venue lands and Bar Equipment artifacts
+- **Sacrifice and recursion** from Backstage’s use of Visitors and Access counters
+- **Multicolor tribal synergies** reflecting the interconnected club community
+- **Control through exile and disruption** via Technicians and Backstage
+
+## Sample Creatures (Legendary DJs and Founders)
+- **Peggy Gou, Global Groove Curator** (GW) — Venue-driven Visitor creation and ramp  
+- **DJ Boring, Deep Grooves Operator** (UB) — Milling synergy creating Visitors  
+- **Palms Trax, Disco Anomaly** (RW) — Spell-chaining and Visual Angel generation  
+- **Maruhni, Bass-Driven Raver** (RG) — Combat-triggered Visitors and mana production  
+- **Ricardo E., Parlour Instigator** (UR) — Spell copying and instant/sorcery synergy  
+- **DJ Very Good Plus, Momentum Synth Master** (UG) — Sound Component synergy and card draw  
+- **Baltra, NYC House Pioneer** (BR) — Combat damage triggers and graveyard exile  
+- **Colkin, Soul of Mauke** (RB) — Visitor and Bouncer synergy with control effects  
+- **DCHM, Mauke Gem Finder** (BG) — Token sacrifice for recursion and Access counters  
+- **Facito, Groove Architect** (UR) — Multicolor spells and echo layering
+- **CJ, Nightlife Alchemist** (GW) — Bar-Crew synergy with Visitor creation and life gain
+- **Die drei L, Mauke Sound Technicians** (UB) — Control and disruption through sound manipulation
+- **Markus, Talker of Shadows** (BG) — Backstage influence and manipulation of Visitors
+- **
+
+## Example Spell
+- **Suspicious Group Trip to the Toilet** (1B)  
+  Sorcery  
+  Create two Visitor tokens. Target opponent sacrifices a creature or discards a card.  
+  *“The shadows move differently in the stalls.”*
+- **DJ Setlist** (2U)  
+  Instant  
+  Choose a DJ you control. Until your next turn, whenever a creature enters the battlefield under an opponent's control, that creature's controller sacrifices it unless they pay 1 life.
+    *“The setlist is the heartbeat of the night.”*
+- **Artist Dinner** (2G)  
+  Sorcery  
+  Choose 1
+  Create a Visitor token for each creature you control.
+  You gain 1 life for each Visitor you control.
+    *“A toast to the artists who make Mauke come alive.”*
+- **Crowd Control** (1R)  
+  Instant  
+  Target creature you control gains +2/+0 until end of turn. If that creature is a Visitor, create a Bouncer token.
+- **Light Show** (3W)  
+  Enchantment  
+  Whenever a DJ you control attacks, create a Visual Angel token with flying.
+- **Sound Check** (1U)  
+  Instant  
+  Choose a DJ you control. Until your next turn, whenever a creature enters the battlefield under an opponent's control, that creature's controller sacrifices it unless they pay 1 life.
+- **Backstage Pass** (2B)  
+  Sorcery  
+  Choose one —
+  • Create a Bouncer token for each Visitor you control.
+  • You gain 1 life for each Bouncer you control.
+- **Access Granted** (1G)  
+  Enchantment  
+  Whenever a Visitor you control dies, you may pay 1 life. If you do, create a Bouncer token.
+- **Guestlist** (1R)  
+  Sorcery  
+  Create a Visitor token for each DJ you control.
+- **Verzehrkarte** (2U)  
+  Enchantment  
+  Whenever you cast a spell, you may pay 1 life. If you do, create a Visitor token.
+- **Last Cigarette** (1B)  
+  Instant  
+  Target Visitor gains indestructible until end of turn. You lose 1 life.
+- **Pfeffi for the Crew** (1W)
+    Sorcery  
+    Create a Visitor token for each Bar-Crew you control. You gain 1 life for each Visitor you control.  
+    *“A round for the crew, because they keep the night alive.”*
+- **Clogged Toilet** (2R)  
+  Enchantment
+    Whenever a Visitor you control dies, you may pay 1 life. If you do, create a Bouncer token.
+- **Putzlicht** (1G)  
+  Enchantment  
+  Whenever a creature you control dies, you may pay 1 life. If you do, create a Bouncer token.
+
+## Sample Tokens
+- **Visitor** (Creature Token, 1/1)  
+- **Bouncer** (Creature Token, 2/2)  
+- **Visual Angel** (Creature Token, 2/2 Flying)  
+- **Sound Component** (Artifact Token)  
+
+## Lands & Equipment
+
+### Venue Lands
+- **Venue – DJ Mixer** (Land – Venue)  
+  Tap: Add C.  
+  Tap, Sacrifice a Visitor: Add one mana of any color.  
+  1, Tap, Sacrifice three Visitors: Draw a card, then discard a card.
+
+- **Venue – Light Console** (Land – Venue)  
+  Tap: Add C.  
+  When enters the battlefield, create a Sound Component token.  
+  Tap, Sacrifice two Sound Components: Create a Visitor token.
+
+- **Lightmapping** (Land – Venue)  
+  Tap: Add C.
+    Tap, Sacrifice a Visitor: Add one mana of any color.
+
+- **Venue – Sound System** (Land – Venue)
+    Tap: Add C.  
+    Tap, Sacrifice a Visitor: Add one mana of any color.  
+    1, Tap, Sacrifice three Visitors: Draw a card, then discard a card.
+
+- **Venue – Bar** (Land – Venue)  
+  Tap: Add C.
+    Tap, Sacrifice a Visitor: Add one mana of any color.
+
+- **Venue – Backstage** (Land – Venue)  
+  Tap: Add C.  
+  Tap, Sacrifice a Visitor: Add one mana of any color.
+
+_ **
+
+### Bar Equipment Artifacts
+- **Cocktail Shaker**  
+  Tap, Sacrifice: Create two Visitor tokens.
+
+- **Jigger**  
+  Tap: Add one mana of any color.
+
+- **Bar Spoon**  
+  2, Tap: Scry 2.
+
+- **Ice Crusher**  
+  Tap: Add C.  
+  Tap, Sacrifice Ice Crusher: Create a Sound Component token.
+
+- **Mexikaner Mixer** (Equipment)  
+  Equipped creature gets +1/+0 and “Tap: You gain 1 life and create a Visitor token.”  
+  Equip 2
+
+- **Berliner Luft Bottle** (Artifact)  
+  Tap, Sacrifice Berliner Luft Bottle: You gain 2 life and create two Visitor tokens.  
+  *“A minty shot of refreshment—the Berlin air captured in a bottle.”*
+
+## Synergies
+- Visitor token generation fuels most factions’ abilities and mana acceleration.
+- Bouncers provide control and crowd management.
+- Equipment and Venue lands provide mana ramp, card draw, and token generation.
+- Backstage factions leverage sacrifice and recursion through Access counters.
+
+## Play Styles
+- Aggro token decks fueled by Visitor creation and tribal synergies.
+- Midrange control with Technicians disrupting opponents and Backstage reanimating key creatures.
+- Five-color ramp with Venue lands and equipment accelerating multicolor spells.
+- Tribal-focused decks emphasizing DJs, Bar-Crew, and Technicians.
+
+---
+## Backstage — The Shadowy Undercurrents
+
+Backstage is the gritty, whispered realm of Mauke where conversations twist and deals are struck. It’s less about the dancefloor’s pulse and more about the hazy haze in dimly lit corners, where influences mingle with substances that blur perception and fuel secrets. Here, **“energy boosts,” “mood enhancers,” and “mind-altering concoctions”** manifest as arcane elixirs and dark concoctions that empower or manipulate Visitors and Bouncers, enhancing control and risk.
+
+### Thematic Flavor
+- **Drugs = Arcane Concoctions:** Represented by **Artifact – Potion** cards and **Enchantment – Addictive Effects** that give both bonuses and costs.
+- Backstage leverages **“high risk, high reward”** mechanics: drawbacks balanced by strong board control and recursion.
+- Visitors under the influence may become more susceptible to control or might fuel stronger effects when sacrificed.
+- Bouncers act as gatekeepers, pushing out unwelcome elements (including “overdosed” tokens).
+
+---
+
+### Example Cards
+
+#### 🧪 **Artifact – Euphoric Elixir**  
+Cost: 1B  
+- Tap, Sacrifice Euphoric Elixir: Target Visitor gains +2/+2 and menace until end of turn. You lose 1 life.  
+*“One sip, and the night feels endless... but the come-down waits.”*
+
+#### 🕯️ **Enchantment – Addictive Atmosphere**  
+Cost: 2BB  
+- Whenever a Visitor you control dies, you may pay 1 life. If you do, create a Bouncer token.  
+- At the beginning of your upkeep, if you control no Visitors, sacrifice Addictive Atmosphere.  
+*“The darker the corner, the louder the whispers.”*
+
+#### 🔥 **Instant – Overdose Panic**  
+Cost: 1BB  
+- Target Visitor gets -X/-X until end of turn, where X is the number of Visitors you control.  
+- If that Visitor would die this turn, exile it instead and create a Bouncer token.  
+*“Too far gone to dance, but perfect to clean the floor.”*
+
+---
+
+### Mechanics Integration
+
+- Backstage players **sacrifice Visitors to power effects** and create Bouncers, simulating controlling the crowd and “clearing trouble.”  
+- Visitors under effects of potions or enchantments gain temporary boosts but at a cost (life loss, eventual death).  
+- Bouncers maintain order but can be consumed or sacrificed for bigger effects—balancing offense and defense.  
+- “Access counters” represent Backstage influence gained by managing Visitors and substances.
+
+---
+
+### Flavor Text & Lore Notes
+- The **drug theme is abstracted** through magical potions and rituals, fitting MTG’s fantasy style.
+- Reflects the murky **moral ambiguity** of nightlife: the allure of highs and the threat of falling too far.  
+- Adds a **layer of tension and risk**—will you push your Visitors too far, or keep the party going safely?
+
+"""
 
     # Set configuration
     config = Config(
@@ -293,10 +499,8 @@ async def main():
             "B": 0.2,  # Black
             "R": 0.2,  # Red
             "G": 0.2  # Green
-        },
-
-        # Image generation model (options: "flux" or "imagen")
-        image_model="imagen"
+        },        # Image generation model (options: "flux1" or "stablediffusion")
+        image_model="flux1"
     )
 
     # Create and run orchestrator

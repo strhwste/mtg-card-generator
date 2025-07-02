@@ -68,32 +68,39 @@ def test_ollama_text_generation(base_url="http://localhost:11434", model="gemma3
         return False
 
 def test_comfyui_workflow(base_url="http://localhost:8188"):
-    """Test workflow queuing with ComfyUI"""
-    print(f"\n🎨 Testing ComfyUI workflow queuing...")
-    
+    """Test workflow queuing with ComfyUI using a saved workflow JSON"""
+    print(f"\n🎨 Testing ComfyUI workflow queuing with saved workflow...")
+
     try:
-        # Simple workflow to test if ComfyUI can process requests
-        workflow = {
-            "prompt": {
-                "1": {
-                    "inputs": {
-                        "text": "test prompt"
-                    },
-                    "class_type": "CLIPTextEncode"
-                }
-            }
-        }
-        
-        response = requests.post(f"{base_url}/prompt", json=workflow, timeout=10)
-        
+        # Load the workflow JSON (exported from ComfyUI UI)
+        workflow_path = Path(__file__).parent / "flux_dev_full_text_to_image.json"
+        if not workflow_path.exists():
+            print(f"❌ Workflow file not found: {workflow_path}")
+            return False
+
+        with open(workflow_path, "r", encoding="utf-8") as f:
+            workflow_json = json.load(f)
+
+        # The workflow is already in the correct API format
+        # The API expects the workflow under the 'prompt' key
+        payload = {"prompt": workflow_json}
+
+        response = requests.post(f"{base_url}/prompt", json=payload, timeout=10)
+
         if response.status_code == 200:
-            print(f"✅ ComfyUI workflow test successful!")
-            return True
+            data = response.json()
+            if "prompt_id" in data:
+                print(f"✅ ComfyUI workflow test successful! prompt_id: {data['prompt_id']}")
+                return True
+            else:
+                print(f"❌ ComfyUI workflow test failed: No prompt_id in response")
+                return False
         else:
             print(f"❌ ComfyUI workflow test failed with status {response.status_code}")
+            print(f"   Response: {response.text}")
             return False
-            
-    except requests.exceptions.RequestException as e:
+
+    except Exception as e:
         print(f"❌ ComfyUI workflow test failed: {e}")
         return False
 

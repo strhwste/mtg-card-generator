@@ -212,10 +212,8 @@ Return only the prompt text with no additional explanation."""
 
                 # Get the active LocalAI image model
                 active_model = self.config.get_active_localai_image_model()
-                print(f"Using image model: {active_model}")
-
-                # Generate image using LocalAI's image generation endpoint
-                image_data = self._generate_image_with_localai(art_prompt, card)
+                print(f"Using image model: {active_model}")                # Generate image using ComfyUI instead of LocalAI
+                image_data = self._generate_image_with_comfyui(art_prompt, card)
 
                 # Check if we need to crop based on aspect ratio
                 if "Saga" in card.type:
@@ -280,6 +278,101 @@ Return only the prompt text with no additional explanation."""
         image_data = base64.b64decode(image_b64)
         
         return image_data
+
+    def _generate_image_with_comfyui(self, prompt: str, card: Card = None) -> bytes:
+        """Generate image using ComfyUI's workflow endpoint.
+        
+        Args:
+            prompt: The text prompt for image generation
+            card: The card object (used to determine if it's a Saga for aspect ratio)
+            
+        Returns:
+            bytes: The generated image data
+        """
+        import time
+        import base64
+        
+        # Load the workflow template
+        workflow_path = Path(__file__).parent.parent / "flux_dev_full_text_to_image.json"
+        if not workflow_path.exists():
+            raise FileNotFoundError(f"ComfyUI workflow not found: {workflow_path}")
+            
+        with open(workflow_path, "r", encoding="utf-8") as f:
+            workflow = json.load(f)
+        
+        # Update the prompt in the workflow
+        # Find the CLIPTextEncodeFlux node (node 41 in your workflow)
+        if "41" in workflow:
+            workflow["41"]["inputs"]["clip_l"] = prompt
+            workflow["41"]["inputs"]["t5xxl"] = prompt
+            
+        # Set image size based on card type
+        is_saga = card and "Saga" in card.type
+        if "27" in workflow:  # EmptySD3LatentImage node
+            if is_saga:
+                workflow["27"]["inputs"]["width"] = 768
+                workflow["27"]["inputs"]["height"] = 1024
+            else:
+                workflow["27"]["inputs"]["width"] = 1024
+                workflow["27"]["inputs"]["height"] = 768
+        
+        # Submit workflow to ComfyUI
+        payload = {"prompt": workflow}
+        response = requests.post(f"{self.config.comfyui_base_url}/prompt", json=payload, timeout=30)
+        
+        if response.status_code != 200:
+            raise Exception(f"ComfyUI workflow submission failed: {response.status_code} - {response.text}")
+            
+        data = response.json()
+        prompt_id = data.get("prompt_id")
+        
+        if not prompt_id:
+            raise Exception("No prompt_id returned from ComfyUI")
+            
+        print(f"ComfyUI job queued with ID: {prompt_id}")
+        
+        # Poll for completion
+        max_wait_time = 300  # 5 minutes
+        start_time = time.time()
+        
+        while time.time() - start_time < max_wait_time:
+            # Check job status
+            history_response = requests.get(f"{self.config.comfyui_base_url}/history/{prompt_id}")
+            
+            if history_response.status_code == 200:
+                history_data = history_response.json()
+                
+                if prompt_id in history_data:
+                    job_data = history_data[prompt_id]
+                    
+                    # Check if job is complete
+                    if "outputs" in job_data:
+                        # Find the SaveImage node output (node 9 in your workflow)
+                        if "9" in job_data["outputs"]:
+                            images = job_data["outputs"]["9"]["images"]
+                            if images:
+                                # Get the first image
+                                image_info = images[0]
+                                filename = image_info["filename"]
+                                subfolder = image_info.get("subfolder", "")
+                                
+                                # Download the image
+                                image_url = f"{self.config.comfyui_base_url}/view"
+                                params = {"filename": filename}
+                                if subfolder:
+                                    params["subfolder"] = subfolder
+                                    
+                                image_response = requests.get(image_url, params=params)
+                                
+                                if image_response.status_code == 200:
+                                    return image_response.content
+                                else:
+                                    raise Exception(f"Failed to download image: {image_response.status_code}")
+            
+            # Wait before next poll
+            time.sleep(2)
+        
+        raise Exception(f"ComfyUI job timed out after {max_wait_time} seconds")
 
     def _get_model_params(self, prompt: str, card: Card = None) -> dict:
         """Get model-specific parameters (kept for compatibility but not used with LocalAI)."""
